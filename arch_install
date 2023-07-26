@@ -1,2 +1,8 @@
 #!/usr/bin/bash
-echo hello
+echo -e "\e[34m---- Disks ----\e[0m"
+disks=($(fdisk -l | grep "Disk /" | awk '{print $2}' | rev | cut -c 2- | rev))
+for index in "${!disks[@]}"; do
+    echo "$index: ${disks[$index]}"
+done
+echo -n "Select a disk: "; read index
+echo -e "\e[32mSelected disk ${disks[index]}\e[0m\n"
