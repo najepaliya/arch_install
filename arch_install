@@ -5,4 +5,8 @@ for index in "${!disks[@]}"; do
     echo "$index: ${disks[$index]}"
 done
 echo -n "Select a disk: "; read index
+if [ $index -lt 0 ] || [ $index -gt $(( ${#disks[@]} - 1 )) ]; then
+	echo -e "\e[31mInvalid input\e[0m"
+	exit
+fi
 echo -e "\e[32mSelected disk ${disks[index]}\e[0m\n"
