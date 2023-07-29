@@ -16,4 +16,4 @@ echo -e "\e[34m---- Partitions ----\e[0m"
 sector_size=$(fdisk -l $disk | grep optimal | rev | awk '{print $2}' | rev)
 boot_end=$(( (268435456 / $sector_size) + 2047 ))
 swap_end=$(( ($(free -b | grep Mem: | awk '{print $2}') / $sector_size) + $boot_end ))
-(echo g; echo n; echo; echo 2048; echo $boot_end; echo t; echo 1; echo n; echo; echo $(( $boot_end + 1 )); echo $swap_end; echo p; echo q;) | fdisk $disk
+(echo g; echo n; echo; echo 2048; echo $boot_end; echo t; echo 1; echo n; echo; echo $(( $boot_end + 1 )); echo $swap_end; echo t; echo 2; echo 19; echo p; echo q;) | fdisk $disk
