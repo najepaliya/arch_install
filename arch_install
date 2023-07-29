@@ -13,4 +13,4 @@ echo -e "\e[32mSelected disk ${disks[index]}\e[0m\n"
 
 echo -e "\e[34m---- Partitions ----\e[0m"
 sector=$(fdisk -l /dev/sda | grep optimal | rev | awk '{print $2}' | rev)
-# (echo p; echo g; echo q) | fdisk ${disks[index]}
+boot=$(( (268435456 / $sector) - 1 ))
