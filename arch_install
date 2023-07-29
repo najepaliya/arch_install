@@ -10,3 +10,7 @@ if [ $index -lt 0 ] || [ $index -gt $(( ${#disks[@]} - 1 )) ]; then
 	exit
 fi
 echo -e "\e[32mSelected disk ${disks[index]}\e[0m\n"
+
+echo -e "\e[34m---- Partitions ----\e[0m"
+sector=$(fdisk -l /dev/sda | grep optimal | rev | awk '{print $2}' | rev)
+# (echo p; echo g; echo q) | fdisk ${disks[index]}
