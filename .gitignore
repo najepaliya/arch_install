@@ -1,4 +1,5 @@
 *
 !.gitignore
+!configure.sh
 !install.sh
 !readme.md
