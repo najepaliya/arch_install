@@ -33,7 +33,32 @@ echo -e "\e[32mCreated root partition\e[0m\n"
 # Filesystems
 echo -e "\e[34m---- Filesystems ----\e[0m"
 partitions=($(fdisk -l $disk | grep ^/dev | awk '{print $1}'))
-# mkfs.vfat -F 32 -n boot ${partitions[0]}
-# mkswap -L swap ${partitions[1]}
-
-# f2fs, ext4, jfs, nilfs2, xfs
+# mkfs.vfat -F 32 -n boot ${partitions[0]} # uncomment later
+# mkswap -L swap ${partitions[1]}          # uncomment later
+filesystems=(ext4 f2fs xfs)
+root_filesystem_command="mkfs -t "
+for index in "${!filesystems[@]}"; do
+				echo "$index: ${filesystems[$index]}"
+done
+while true; do
+	echo -n "Select a filesystem: "; read index
+	if [ $index -gt -1 ] && [ $index -lt ${#filesystems[@]} ]; then
+		filesystem=${filesystems[index]}
+		root_filesystem_command+="$filesystem "
+		break
+	fi
+done
+if [ $filesystem = "ext4" ]; then
+	root_filesystem_command+="-F "
+else
+	root_filesystem_command+="-f "
+fi
+if [ $filesystem = "f2fs" ]; then
+	root_filesystem_command+="-l root"
+else
+	root_filesystem_command+="-L root"
+fi
+echo $root_filesystem_command # change to eval later
+echo -e "\e[32mFormatted partition 1 to vfat\e[0m"
+echo -e "\e[32mFormatted partition 2 to swap\e[0m"
+echo -e "\e[32mFormatted partition 3 to $filesystem\e[0m\n"
