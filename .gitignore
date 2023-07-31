@@ -1,4 +1,4 @@
 *
 !.gitignore
-!arch_install
+!install.sh
 !readme.md
