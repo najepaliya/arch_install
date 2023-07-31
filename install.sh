@@ -63,3 +63,9 @@ echo $root_filesystem_command # change to eval later
 echo -e "\e[32mFormatted partition 1 to vfat\e[0m"
 echo -e "\e[32mFormatted partition 2 to swap\e[0m"
 echo -e "\e[32mFormatted partition 3 to $filesystem\e[0m\n"
+
+# Installation
+echo -e "\e[34m---- Installation ----\e[0m"
+# mount -L root /mnt # uncomment later
+# mkdir /mnt/boot    # uncomment later
+# mount -L boot /mnt/boot # uncomment later
