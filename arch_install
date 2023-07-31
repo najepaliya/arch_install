@@ -58,7 +58,7 @@ if [ $filesystem = "f2fs" ]; then
 else
 	root_filesystem_command+="-L root "
 fi
-root_filesystem_command+=" ${partitions[2]}"
+root_filesystem_command+="${partitions[2]}"
 echo $root_filesystem_command # change to eval later
 echo -e "\e[32mFormatted partition 1 to vfat\e[0m"
 echo -e "\e[32mFormatted partition 2 to swap\e[0m"
