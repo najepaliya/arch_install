@@ -1,17 +1,21 @@
 #!/usr/bin/bash
+
+# Disks
 echo -e "\e[34m---- Disks ----\e[0m"
 disks=($(fdisk -l | grep "Disk /" | awk '{print $2}' | rev | cut -c 2- | rev))
-for index in "${!disks[@]}"; do
-    echo "$index: ${disks[$index]}"
+while true; do
+	for index in "${!disks[@]}"; do
+			echo "$index: ${disks[$index]}"
+	done
+	echo -n "Select a disk: "; read index
+	if [ $index -gt -1 ] && [ $index -lt ${#disks[@]} ]; then
+		disk=${disks[index]}
+		echo -e "\e[32mSelected disk $disk\e[0m\n"
+		break
+	fi
 done
-echo -n "Select a disk: "; read index
-if [ $index -lt 0 ] || [ $index -gt $(( ${#disks[@]} - 1 )) ]; then
-	echo -e "\e[31mInvalid input\e[0m"
-	exit
-fi
-disk=${disks[index]}
-echo -e "\e[32mSelected disk $disk\e[0m\n"
 
+# Partitions
 echo -e "\e[34m---- Partitions ----\e[0m"
 sector_size=$(fdisk -l $disk | grep optimal | rev | awk '{print $2}' | rev)
 boot_end=$(( (268435456 / $sector_size) + 2047 ))
@@ -22,3 +26,10 @@ swap_end=$(( ($(free -b | grep Mem: | awk '{print $2}') / $sector_size) + $boot_
 	echo n; echo; echo $(( $swap_end + 1 )); echo -0;
 	echo p; echo q; # change to write later
 ) | fdisk $disk
+
+# Filesystems
+partitions=($(fdisk -l $disk | grep ^/dev | awk '{print $1}'))
+# mkfs.vfat -F 32 -n boot ${partitions[0]}
+# mkswap -L swap ${partitions[1]}
+
+# f2fs, ext4, jfs, nilfs2, xfs
