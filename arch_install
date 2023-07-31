@@ -25,9 +25,13 @@ swap_end=$(( ($(free -b | grep Mem: | awk '{print $2}') / $sector_size) + $boot_
 	echo n; echo; echo $(( $boot_end + 1 )); echo $swap_end; echo t; echo 2; echo 19;
 	echo n; echo; echo $(( $swap_end + 1 )); echo -0;
 	echo p; echo q; # change to write later
-) | fdisk $disk
+) | fdisk $disk &> /dev/null
+echo -e "\e[32mCreated boot partition\e[0m"
+echo -e "\e[32mCreated swap partition\e[0m"
+echo -e "\e[32mCreated root partition\e[0m\n"
 
 # Filesystems
+echo -e "\e[34m---- Filesystems ----\e[0m"
 partitions=($(fdisk -l $disk | grep ^/dev | awk '{print $1}'))
 # mkfs.vfat -F 32 -n boot ${partitions[0]}
 # mkswap -L swap ${partitions[1]}
