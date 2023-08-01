@@ -69,3 +69,16 @@ echo -e "\e[34m---- Installation ----\e[0m"
 # mount -L root /mnt # uncomment later
 # mkdir /mnt/boot    # uncomment later
 # mount -L boot /mnt/boot # uncomment later
+source ./configure.sh
+for index in "${!presets[@]}"; do
+			echo "$index: ${presets[$index]}"
+done
+while true; do
+	echo -n "Select a package preset: "; read index
+	if [ $index -gt -1 ] && [ $index -lt ${#presets[@]} ]; then
+		preset=${presets[index]}
+		break
+	fi
+done
+
+echo ${!preset}
