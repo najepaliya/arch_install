@@ -24,7 +24,7 @@ swap_end=$(( ($(free -b | grep Mem: | awk '{print $2}') / $sector_size) + $boot_
 	echo g; echo n; echo; echo 2048; echo $boot_end; echo t; echo 1;
 	echo n; echo; echo $(( $boot_end + 1 )); echo $swap_end; echo t; echo 2; echo 19;
 	echo n; echo; echo $(( $swap_end + 1 )); echo -0;
-	echo p; echo q; # change to write later
+	echo w;
 ) | fdisk $disk &> /dev/null
 echo -e "\e[32mCreated boot partition\e[0m"
 echo -e "\e[32mCreated swap partition\e[0m"
@@ -33,8 +33,8 @@ echo -e "\e[32mCreated root partition\e[0m\n"
 # Filesystems
 echo -e "\e[34m---- Filesystems ----\e[0m"
 partitions=($(fdisk -l $disk | grep ^/dev | awk '{print $1}'))
-# mkfs.vfat -F 32 -n boot ${partitions[0]} # uncomment later
-# mkswap -L swap ${partitions[1]}          # uncomment later
+mkfs.vfat -F 32 -n boot ${partitions[0]}
+mkswap -L swap ${partitions[1]}
 filesystems=(ext4 f2fs xfs)
 root_filesystem_command="mkfs -t "
 for index in "${!filesystems[@]}"; do
@@ -59,16 +59,16 @@ else
 	root_filesystem_command+="-L root "
 fi
 root_filesystem_command+="${partitions[2]}"
-# eval $root_filesystem_command # uncomment later
+eval $root_filesystem_command
 echo -e "\e[32mFormatted partition 1 to vfat\e[0m"
 echo -e "\e[32mFormatted partition 2 to swap\e[0m"
 echo -e "\e[32mFormatted partition 3 to $filesystem\e[0m\n"
 
 # Installation
 echo -e "\e[34m---- Installation ----\e[0m"
-# mount -L root /mnt # uncomment later
-# mkdir /mnt/boot    # uncomment later
-# mount -L boot /mnt/boot # uncomment later
+mount -L root /mnt
+mkdir /mnt/boot
+mount -L boot /mnt/boot
 source ./configure.sh
 for index in "${!presets[@]}"; do
 			echo "$index: ${presets[$index]}"
@@ -80,50 +80,49 @@ while true; do
 		break
 	fi
 done
-#pacstrap /mnt ${!preset}
-#echo -e "LABEL=boot\t/boot\tvfat\tnoatime\t0\t2\nLABEL=swap\tnone\tswap\tsw\t0\t0\nLABEL=root\t/\t$filesystem\tnoatime\t0\t1" > /mnt/etc/fstab
-#echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
-#echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
-#echo -n "Enter hostname: "; read hostname
-#echo $hostname > /mnt/etc/hostname
-# cat << EOF > /mnt/root/continue.sh
-# timedatectl set-timezone (curl https://ipapi.co/timezone)
-# hwclock --systohc
-# locale-gen
-# echo -n "Enter user: "; read user
-# echo -n "Enter name: "; read name
-# useradd -c \"$name\" -m -G wheel -s /bin/bash $user
-# echo "Setting password for $user"
-# passwd $user
-# echo "Setting password for root"
-# passwd
-#systemctl enable NetworkManager
-# if [ -e /usr/bin/gdm ]; then
-# 	systemctl enable gdm
-# elif [ -e /usr/bin/sddm ]; then
-# 	systemctl enable sddm
-# fi
-# bootctl install
-# echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /boot/loader/loader.conf
-################## echo -e "title Arch\nlinux /vmlinuz-linux\ninitrd /initramfs-linux.img\ninitrd /amd-ucode.img\noptions root=LABEL=root resume=LABEL=swap rw quiet" > /boot/loader/entries/arch.conf
-# for command in "${commands[@]}"; do
-#   eval $command
-# done
-# exit
-# EOF
-# chmod +x /mnt/root/continue.sh
-# arch-chroot /mnt /root/continue.sh
-# rm -rf /mnt/root/*
-# rm -rf /mnt/root/.*
-# rm -rf /mnt/home/$user/*
-# rm -rf /mnt/home/$user/.*
-# umount -R /mnt
-# echo -e "\e[32mInstallation complete\e[0m"
+pacstrap /mnt ${!preset}
+echo -e "LABEL=boot\t/boot\tvfat\tnoatime\t0\t2\nLABEL=swap\tnone\tswap\tsw\t0\t0\nLABEL=root\t/\t$filesystem\tnoatime\t0\t1" > /mnt/etc/fstab
+echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
+echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
+echo -n "Enter hostname: "; read hostname
+echo $hostname > /mnt/etc/hostname
+cat << EOF > /mnt/root/continue.sh
+timedatectl set-timezone (curl https://ipapi.co/timezone)
+hwclock --systohc
+locale-gen
+echo -n "Enter user: "; read user
+echo -n "Enter name: "; read name
+useradd -c \"$name\" -m -G wheel -s /bin/bash $user
+echo "Setting password for $user"
+passwd $user
+echo "Setting password for root"
+passwd
+echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
+systemctl enable NetworkManager
+if [ -e /usr/bin/gdm ]; then
+	systemctl enable gdm
+elif [ -e /usr/bin/sddm ]; then
+	systemctl enable sddm
+fi
+bootctl install
+echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /boot/loader/loader.conf
 initrds=($(ls /boot | grep .img | grep -v fallback))
 boot_config="title Arch\nlinux /vmlinuz-linux\n"
 for index in "${!initrds[@]}"; do
 			boot_config+="initrd /${initrds[$index]}\n"
 done
 boot_config+="options root=LABEL=root resume=LABEL=swap rw quiet"
-echo -e $boot_config
-# echo -e "title Arch\nlinux /vmlinuz-linux\ninitrd /initramfs-linux.img\ninitrd /amd-ucode.img\noptions root=LABEL=root resume=LABEL=swap rw quiet"
+echo -e $boot_config > /boot/loader/entries/arch.conf
+for command in "${commands[@]}"; do
+  eval $command
+done
+exit
+EOF
+chmod +x /mnt/root/continue.sh
+arch-chroot /mnt /root/continue.sh
+rm -rf /mnt/root/*
+rm -rf /mnt/root/.*
+rm -rf /mnt/home/$user/*
+rm -rf /mnt/home/$user/.*
+umount -R /mnt
+echo -e "\e[32mInstallation complete\e[0m"
