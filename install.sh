@@ -59,7 +59,7 @@ else
 	root_filesystem_command+="-L root "
 fi
 root_filesystem_command+="${partitions[2]}"
-echo $root_filesystem_command # change to eval later
+# eval $root_filesystem_command # uncomment later
 echo -e "\e[32mFormatted partition 1 to vfat\e[0m"
 echo -e "\e[32mFormatted partition 2 to swap\e[0m"
 echo -e "\e[32mFormatted partition 3 to $filesystem\e[0m\n"
@@ -80,5 +80,50 @@ while true; do
 		break
 	fi
 done
-
-echo ${!preset}
+#pacstrap /mnt ${!preset}
+#echo -e "LABEL=boot\t/boot\tvfat\tnoatime\t0\t2\nLABEL=swap\tnone\tswap\tsw\t0\t0\nLABEL=root\t/\t$filesystem\tnoatime\t0\t1" > /mnt/etc/fstab
+#echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
+#echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
+#echo -n "Enter hostname: "; read hostname
+#echo $hostname > /mnt/etc/hostname
+# cat << EOF > /mnt/root/continue.sh
+# timedatectl set-timezone (curl https://ipapi.co/timezone)
+# hwclock --systohc
+# locale-gen
+# echo -n "Enter user: "; read user
+# echo -n "Enter name: "; read name
+# useradd -c \"$name\" -m -G wheel -s /bin/bash $user
+# echo "Setting password for $user"
+# passwd $user
+# echo "Setting password for root"
+# passwd
+#systemctl enable NetworkManager
+# if [ -e /usr/bin/gdm ]; then
+# 	systemctl enable gdm
+# elif [ -e /usr/bin/sddm ]; then
+# 	systemctl enable sddm
+# fi
+# bootctl install
+# echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /boot/loader/loader.conf
+################## echo -e "title Arch\nlinux /vmlinuz-linux\ninitrd /initramfs-linux.img\ninitrd /amd-ucode.img\noptions root=LABEL=root resume=LABEL=swap rw quiet" > /boot/loader/entries/arch.conf
+# for command in "${commands[@]}"; do
+#   eval $command
+# done
+# exit
+# EOF
+# chmod +x /mnt/root/continue.sh
+# arch-chroot /mnt /root/continue.sh
+# rm -rf /mnt/root/*
+# rm -rf /mnt/root/.*
+# rm -rf /mnt/home/$user/*
+# rm -rf /mnt/home/$user/.*
+# umount -R /mnt
+# echo -e "\e[32mInstallation complete\e[0m"
+initrds=($(ls /boot | grep .img | grep -v fallback))
+boot_config="title Arch\nlinux /vmlinuz-linux\n"
+for index in "${!initrds[@]}"; do
+			boot_config+="initrd /${initrds[$index]}\n"
+done
+boot_config+="options root=LABEL=root resume=LABEL=swap rw quiet"
+echo -e $boot_config
+# echo -e "title Arch\nlinux /vmlinuz-linux\ninitrd /initramfs-linux.img\ninitrd /amd-ucode.img\noptions root=LABEL=root resume=LABEL=swap rw quiet"
