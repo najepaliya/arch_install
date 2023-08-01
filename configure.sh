@@ -5,4 +5,5 @@ gnome="$base gdm gnome-console network-manager-applet $extras" # essential for g
 plasma="$base konsole kscreen kwallet-pam plasma-desktop plasma-nm plasma-pa plasma-wayland-session powerdevil sddm-kcm $extras" # essential for plasma
 commands=(
 	"echo \"exec fish\" >> /etc/bash.bashrc"
+	"echo \"blacklist pcspkr\" > /etc/modprobe.d/blacklist.conf"
 ) # additional commands to execute within chroot
