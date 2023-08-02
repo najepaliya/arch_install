@@ -62,9 +62,9 @@ echo -e "\e[32mFormatted partition 3 to $filesystem\e[0m\n"
 
 # Installation
 echo -e "\e[34m---- Installation ----\e[0m"
-mount -L root /mnt
+mount ${partitions[2]} /mnt
 mkdir /mnt/boot
-mount -L boot /mnt/boot
+mount ${partitions[0]} /mnt/boot
 source ./configure.sh
 for index in "${!presets[@]}"; do
 			echo "$index: ${presets[$index]}"
