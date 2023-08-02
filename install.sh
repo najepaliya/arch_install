@@ -78,12 +78,12 @@ while true; do
 done
 pacstrap -i /mnt ${!preset}
 echo -e "${partitions[0]}\t/boot\tvfat\tnoatime\t0\t2\n${partitions[1]}\tnone\tswap\tsw\t0\t0\n${partitions[2]}\t/\t$filesystem\tnoatime\t0\t1" > /mnt/etc/fstab
-echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
-echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
+echo $locale > /mnt/etc/locale.gen
+echo LANG=$(echo $locale | awk '{print $1}') > /mnt/etc/locale.conf
 echo -n "Enter hostname: "; read hostname
 echo $hostname > /mnt/etc/hostname
 
-ln -sf /mnt/usr/share/zoneinfo/US/Arizona /mnt/etc/localtime
+ln -sf /mnt/usr/share/zoneinfo/$timezone /mnt/etc/localtime
 
 arch-chroot /mnt bash -c '
 hwclock --systohc
