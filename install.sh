@@ -83,7 +83,7 @@ echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
 echo -n "Enter hostname: "; read hostname
 echo $hostname > /mnt/etc/hostname
 cat << EOF > /mnt/root/continue.sh
-timedatectl set-timezone (curl https://ipapi.co/timezone)
+ln -sf /usr/share/zoneinfo/US/Arizona /etc/localtime
 hwclock --systohc
 locale-gen
 echo -n "Enter user: "; read user
