@@ -77,23 +77,24 @@ while true; do
 	fi
 done
 pacstrap -i /mnt ${!preset}
-echo -e "LABEL=boot\t/boot\tvfat\tnoatime\t0\t2\nLABEL=swap\tnone\tswap\tsw\t0\t0\nLABEL=root\t/\t$filesystem\tnoatime\t0\t1" > /mnt/etc/fstab
+echo -e "${partitions[0]}\t/boot\tvfat\tnoatime\t0\t2\n${partitions[1]}\tnone\tswap\tsw\t0\t0\n${partitions[2]}\t/\t$filesystem\tnoatime\t0\t1" > /mnt/etc/fstab
 echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
 echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
 echo -n "Enter hostname: "; read hostname
 echo $hostname > /mnt/etc/hostname
-cat << EOF > /mnt/root/continue.sh
-ln -sf /usr/share/zoneinfo/US/Arizona /etc/localtime
+
+ln -sf /mnt/usr/share/zoneinfo/US/Arizona /mnt/etc/localtime
+
+arch-chroot /mnt bash -c '
 hwclock --systohc
 locale-gen
 echo -n "Enter user: "; read user
 echo -n "Enter name: "; read name
-useradd -c \"$name\" -m -G wheel -s /bin/bash $user
+useradd -c "$name" -m -G wheel -s /bin/bash $user
 echo "Setting password for $user"
 passwd $user
 echo "Setting password for root"
 passwd
-echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 systemctl enable NetworkManager
 if [ -e /usr/bin/gdm ]; then
 	systemctl enable gdm
@@ -101,24 +102,22 @@ elif [ -e /usr/bin/sddm ]; then
 	systemctl enable sddm
 fi
 bootctl install
-echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /boot/loader/loader.conf
-initrds=($(ls /boot | grep .img | grep -v fallback))
+'
+
+echo "%wheel ALL=(ALL:ALL) ALL" >> /mnt/etc/sudoers
+# for command in "${commands[@]}"; do
+#   eval $command
+# done
+echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /mnt/boot/loader/loader.conf
+initrds=($(ls /mnt/boot | grep .img | grep -v fallback))
 boot_config="title Arch\nlinux /vmlinuz-linux\n"
 for index in "${!initrds[@]}"; do
-			boot_config+="initrd /${initrds[$index]}\n"
+	boot_config+="initrd /${initrds[$index]}\n"
 done
-boot_config+="options root=LABEL=root resume=LABEL=swap rw quiet"
-echo -e $boot_config > /boot/loader/entries/arch.conf
-for command in "${commands[@]}"; do
-  eval $command
-done
-exit
-EOF
-chmod +x /mnt/root/continue.sh
-arch-chroot /mnt /root/continue.sh
+boot_config+="options root=${partitions[2]} resume=${partitions[1]} rw quiet"
+echo -e $boot_config > /mnt/boot/loader/entries/arch.conf
+
 rm -rf /mnt/root/*
 rm -rf /mnt/root/.*
-rm -rf /mnt/home/$user/*
-rm -rf /mnt/home/$user/.*
 umount -R /mnt
 echo -e "\e[32mInstallation complete\e[0m"
