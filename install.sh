@@ -105,9 +105,6 @@ bootctl install
 '
 
 echo "%wheel ALL=(ALL:ALL) ALL" >> /mnt/etc/sudoers
-# for command in "${commands[@]}"; do
-#   eval $command
-# done
 echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /mnt/boot/loader/loader.conf
 initrds=($(ls /mnt/boot | grep .img | grep -v fallback))
 boot_config="title Arch\nlinux /vmlinuz-linux\n"
@@ -116,6 +113,13 @@ for index in "${!initrds[@]}"; do
 done
 boot_config+="options root=${partitions[2]} resume=${partitions[1]} rw quiet"
 echo -e $boot_config > /mnt/boot/loader/entries/arch.conf
+
+echo "#!/usr/bin/bash" > /mnt/root/commands.sh
+for command in "${commands[@]}"; do
+    echo $command >> /mnt/root/commands.sh
+done
+chmod +x /mnt/root/commands.sh
+arch-chroot /mnt /bin/bash /root/commands.sh
 
 rm -rf /mnt/root/*
 rm -rf /mnt/root/.*
