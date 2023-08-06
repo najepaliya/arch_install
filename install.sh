@@ -38,7 +38,7 @@ mkswap ${partitions[1]}
 filesystems=(ext4 f2fs xfs)
 root_filesystem_command="mkfs -t "
 for index in "${!filesystems[@]}"; do
-				echo "$index: ${filesystems[$index]}"
+	echo "$index: ${filesystems[$index]}"
 done
 while true; do
 	echo -n "Select a filesystem: "; read index
@@ -83,17 +83,16 @@ echo LANG=$(echo $locale | awk '{print $1}') > /mnt/etc/locale.conf
 echo -n "Enter hostname: "; read hostname
 echo $hostname > /mnt/etc/hostname
 
-ln -sf /mnt/usr/share/zoneinfo/$timezone /mnt/etc/localtime
-
-arch-chroot /mnt bash -c '
+echo "#!/usr/bin/bash
+ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
 hwclock --systohc
 locale-gen
-echo -n "Enter user: "; read user
-echo -n "Enter name: "; read name
-useradd -c "$name" -m -G wheel -s /bin/bash $user
-echo "Setting password for $user"
-passwd $user
-echo "Setting password for root"
+echo -n \"Enter user: \"; read user
+echo -n \"Enter name: \"; read name
+useradd -c \"\$name\" -m -G wheel -s /bin/bash \$user
+echo \"Setting password for \$user\"
+passwd \$user
+echo \"Setting password for root\"
 passwd
 systemctl enable bluetooth NetworkManager
 if [ -e /usr/bin/gdm ]; then
@@ -101,8 +100,15 @@ if [ -e /usr/bin/gdm ]; then
 elif [ -e /usr/bin/sddm ]; then
 	systemctl enable sddm
 fi
-bootctl install
-'
+bootctl install" > /mnt/root/continue.sh
+
+for command in "${commands[@]}"; do
+    echo $command >> /mnt/root/continue.sh
+done
+
+chmod +x /mnt/root/continue.sh
+
+arch-chroot /mnt /bin/bash /root/continue.sh
 
 echo "%wheel ALL=(ALL:ALL) ALL" >> /mnt/etc/sudoers
 echo -e "default arch.conf\ntimeout 4\neditor no\nconsole-mode max" > /mnt/boot/loader/loader.conf
@@ -113,13 +119,6 @@ for index in "${!initrds[@]}"; do
 done
 boot_config+="options root=${partitions[2]} resume=${partitions[1]} rw quiet"
 echo -e $boot_config > /mnt/boot/loader/entries/arch.conf
-
-echo "#!/usr/bin/bash" > /mnt/root/commands.sh
-for command in "${commands[@]}"; do
-    echo $command >> /mnt/root/commands.sh
-done
-chmod +x /mnt/root/commands.sh
-arch-chroot /mnt /bin/bash /root/commands.sh
 
 rm -rf /mnt/root/*
 rm -rf /mnt/root/.*
