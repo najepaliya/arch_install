@@ -94,7 +94,7 @@ echo \"Setting password for \$user\"
 passwd \$user
 echo \"Setting password for root\"
 passwd
-systemctl enable bluetooth NetworkManager
+systemctl enable NetworkManager
 if [ -e /usr/bin/gdm ]; then
 	systemctl enable gdm
 elif [ -e /usr/bin/sddm ]; then
